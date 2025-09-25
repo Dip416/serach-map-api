@@ -50,9 +50,18 @@ export async function handleProxy(
         ...setCorsHeaders(origin),
       },
     });
-  } catch (err: any) {
-    const status = err.response?.status || 500;
-    const data = err.response?.data || { message: err.message };
+  } catch (err: unknown) {
+    // Helper type guard for Axios errors
+    const axiosError = err as {
+      response?: { status?: number; data?: unknown };
+      message?: string;
+    };
+
+    const status = axiosError.response?.status ?? 500;
+    const data = axiosError.response?.data ?? {
+      message: axiosError.message ?? "Unknown error",
+    };
+
     return new Response(JSON.stringify(data), {
       status,
       headers: { "Content-Type": "application/json" },
